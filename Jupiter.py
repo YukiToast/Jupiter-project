@@ -1,4 +1,5 @@
 #Jupiter module
+#imports
 import pandas as pd
 import numpy as np
 
@@ -9,7 +10,7 @@ def Kippler(row):
     #returns predicted mass
     return jupiter_mass
 
-
+#defines Moons class
 class Moons:
 
     def __init__(self):
@@ -27,35 +28,17 @@ class Moons:
         #removes column with mainly NULL values
         self.data = self.data.drop("mass_kg", axis="columns")
 
-        #MAYBE NOT NECESSARY
-        # self.period_days = self.data["period_days"]
-        # self.distance_km = self.data["distance_km"]
-        # self.radius_km = self.data["radius_km"]
-        # self.mag = self.data["mag"]
-        # self.mass_kg = self.data["mass_kg"]
-        # self.group = self.data["group"]
-        # self.ecc = self.data["ecc"]
-        # self.inclination_deg = self.data["inclination_deg"]
-
         #creates precalculated columns
         self.data["T^2"] = (self.data["period_days"]*86400)**2
         self.data["a^3"] = (self.data["distance_km"]*1000)**3
-
-    def list_request(self, request_list):
-        """Returns dataframe of items in list"""
-        #allows list of moon names to be taken from data and returned
-        temp_df = self.data["moon"]
-        for i in range(len(request_list)):
-            temp_df.join(self.data[request_list[i]])
-        return temp_df
-    
     
     def model(self):
-        """Creates model of data"""
+        """Creates model"""
+
         #imports used parts of sklearn
         from sklearn import linear_model
         from sklearn.model_selection import train_test_split
-        from sklearn.metrics import mean_squared_error, r2_score
+        from sklearn.metrics import r2_score
 
         #creates linear regression model
         self.model = linear_model.LinearRegression(fit_intercept=True)
@@ -74,12 +57,12 @@ class Moons:
         #uses model to predict values
         self.pred_T2 = self.model.predict(self.x_test)
 
-        #outputs R^2 score and RMSE score
+        #outputs R^2 score
         print(f"The R2 score is: {r2_score(self.y_test,self.pred_T2)}")
-        print(f"The RMSE score is: {mean_squared_error(self.y_test,self.pred_T2, squared=True)}")
 
-    def plot(self):
+    def model_plot(self):
         """Plots model data"""
+
         #imports matplotlib
         import matplotlib.pyplot as plt
 
@@ -96,21 +79,64 @@ class Moons:
         ax.set_xlabel("a^3")
         ax.set_ylabel("T^2")
 
-    def summary_stats(self, group):
+    def summary_stats(self,column, group="group"):
         """Returns summary data of specified group"""
 
-        self.summary = self.data.groupby(group).describe()
+        #groups data and produces summary of specified column
+        self.summary = self.data.groupby(group)
+        self.summary = self.summary[column].describe()
 
         return self.summary
     
     def relationship_view(self):
+        """outputs plots of each column against each other"""
 
         from seaborn import pairplot
         
+        #produces plot of every column against every column
         pairplot(self.data)
     
-    def review_data(self):
-        return self.data
+    def view(self, head=False):
+        """Outputs data or head of data if specified"""
+
+        #returns data or head data
+        if head == True:
+            return self.data.head()
+        else:
+            return self.data
+        
+    def jupiter_mass_predict(self):
+        """predicts mass of jupiter"""
+
+        #calculates mass of jupiter using the data from the model
+        self.jp_mass = (4* np.pi**2) / (self.model.coef_[0]*6.67e-11)
+
+        #prints f string with predicted mass of jupiter
+        print(f"The mass of jupiter is predicted to be {self.jp_mass}Kg")
+
+    def locate(self, items):
+        """uses loc to return specified rows"""
+
+        #returns specified rows
+        return self.data.loc[items]
+    
+    def plot(self, x, y, x_label, y_label):
+        """Plots specified data"""
+
+        #imports matplotlib
+        import matplotlib.pyplot as plt
+
+        #creates figure
+        fig, ax  = plt.subplots()
+
+        #Create a scatter plot of the known a^3-T^2 values
+        ax.scatter(self.data[x], self.data[y])
+
+        # Axis labels and tile
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+    
+
 
     
                 
